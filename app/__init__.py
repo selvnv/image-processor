@@ -1,0 +1,1 @@
+"""Image processor application package."""

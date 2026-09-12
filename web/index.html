@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Image Processor</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
+  <style>[x-cloak]{display:none!important}</style>
+</head>
+<body class="min-h-screen bg-slate-100 text-slate-800 antialiased">
+
+  <header class="bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 text-white shadow-lg">
+    <div class="max-w-5xl mx-auto px-6 py-10">
+      <h1 class="text-3xl font-bold tracking-tight">Image Processor</h1>
+      <p class="mt-2 text-indigo-100">Ресайз, обрезка и сжатие изображений прямо в браузере</p>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto px-4 py-8" x-data="imageApp()" x-cloak>
+
+    <div class="mb-6">
+      <div
+        @dragover.prevent="dragging = true"
+        @dragleave.prevent="dragging = false"
+        @drop.prevent="dragging = false; addFiles($event.dataTransfer.files)"
+        @click="$refs.fileInput.click()"
+        :class="dragging ? 'border-indigo-500 bg-indigo-50' : 'border-slate-300 bg-white hover:border-indigo-400'"
+        class="border-2 border-dashed rounded-2xl p-10 text-center cursor-pointer transition-colors"
+      >
+        <input
+          type="file"
+          x-ref="fileInput"
+          multiple
+          accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+          class="hidden"
+          @change="addFiles($event.target.files)"
+        />
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mx-auto h-12 w-12 text-slate-400">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+        </svg>
+        <p class="mt-4 text-lg font-medium text-slate-600">
+          Перетащите изображения сюда или <span class="text-indigo-600 font-semibold">выберите файлы</span>
+        </p>
+        <p class="mt-1 text-sm text-slate-400">JPEG, PNG · можно несколько файлов</p>
+      </div>
+    </div>
+
+    <template x-if="files.length">
+      <div class="mb-6 bg-white rounded-2xl shadow-sm p-5">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-sm font-semibold text-slate-500 uppercase tracking-wide">
+            Файлы (<span x-text="files.length"></span>)
+          </h2>
+          <button type="button" @click="clearAll()" class="text-sm text-slate-400 hover:text-red-500 transition-colors">Очистить</button>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+          <template x-for="(item, index) in files" :key="index">
+            <div class="relative rounded-lg border border-slate-200 overflow-hidden bg-slate-50">
+              <img :src="item.url" class="h-24 w-full object-cover" />
+              <button type="button" @click="removeFile(index)"
+                class="absolute top-1.5 right-1.5 h-6 w-6 rounded-full bg-black/60 text-white text-sm leading-none flex items-center justify-center hover:bg-red-500 transition-colors">×</button>
+              <div class="px-2 py-1.5">
+                <p class="text-xs text-slate-600 truncate" :title="item.file.name" x-text="item.file.name"></p>
+                <p class="text-[11px] text-slate-400" x-text="formatSize(item.file.size)"></p>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+    </template>
+
+    <div class="bg-white rounded-2xl shadow-sm p-6 mb-6">
+      <h2 class="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-5">Параметры обработки</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1.5">Ширина, px</label>
+          <input type="number" min="1" x-model="width" placeholder="авто"
+            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1.5">Высота, px</label>
+          <input type="number" min="1" x-model="height" placeholder="авто"
+            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1.5">Режим</label>
+          <div class="grid grid-cols-3 gap-2">
+            <button type="button" @click="mode='fit'"
+              :class="mode==='fit' ? 'bg-indigo-600 text-white border-indigo-600 shadow' : 'bg-white text-slate-600 border-slate-300 hover:border-indigo-400'"
+              class="px-3 py-2 rounded-lg border text-sm font-medium transition-colors">Fit</button>
+            <button type="button" @click="mode='cover'"
+              :class="mode==='cover' ? 'bg-indigo-600 text-white border-indigo-600 shadow' : 'bg-white text-slate-600 border-slate-300 hover:border-indigo-400'"
+              class="px-3 py-2 rounded-lg border text-sm font-medium transition-colors">Cover</button>
+            <button type="button" @click="mode='crop'"
+              :class="mode==='crop' ? 'bg-indigo-600 text-white border-indigo-600 shadow' : 'bg-white text-slate-600 border-slate-300 hover:border-indigo-400'"
+              class="px-3 py-2 rounded-lg border text-sm font-medium transition-colors">Crop</button>
+          </div>
+          <p class="mt-2 text-xs text-slate-400" x-text="modeHint"></p>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1.5">Формат</label>
+          <div class="grid grid-cols-2 gap-2">
+            <button type="button" @click="format='jpeg'"
+              :class="format==='jpeg' ? 'bg-indigo-600 text-white border-indigo-600 shadow' : 'bg-white text-slate-600 border-slate-300 hover:border-indigo-400'"
+              class="px-3 py-2 rounded-lg border text-sm font-medium transition-colors">JPEG</button>
+            <button type="button" @click="format='webp'"
+              :class="format==='webp' ? 'bg-indigo-600 text-white border-indigo-600 shadow' : 'bg-white text-slate-600 border-slate-300 hover:border-indigo-400'"
+              class="px-3 py-2 rounded-lg border text-sm font-medium transition-colors">WebP</button>
+          </div>
+        </div>
+
+        <div class="md:col-span-2">
+          <label class="flex items-center justify-between text-sm font-medium text-slate-700 mb-1.5">
+            <span>Качество</span></span>
+            <span class="text-indigo-600 font-semibold" x-text="quality"></span>
+          </label>
+          <input type="range" min="1" max="100" x-model.number="quality"
+            class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600" />
+        </div>
+      </div>
+    </div>
+
+    <div class="mb-6">
+      <button type="button" @click="process()" :disabled="!files.length || processing"
+        class="w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-semibold text-white transition-colors"
+        :class="(!files.length || processing) ? 'bg-slate-300 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700'">
+        <svg x-show="processing" class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <span x-text="processing ? 'Обработка…' : 'Обработать изображения'"></span>
+      </button>
+    </div>
+
+    <template x-if="error">
+      <div class="mb-6 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 flex items-start justify-between gap-3">
+        <span class="text-sm" x-text="error"></span>
+        <button type="button" @click="error=''" class="text-red-400 hover:text-red-600 font-bold leading-none">×</button>
+      </div>
+    </template>
+
+    <template x-if="resultUrl">
+      <div class="bg-white rounded-2xl shadow-sm p-6">
+        <h2 class="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-3">Результат</h2>
+        <template x-if="resultIsImage">
+          <img :src="resultUrl" class="max-h-96 rounded-lg border border-slate-200 bg-slate-50" />
+        </template>
+        <template x-if="!resultIsImage">
+          <div class="rounded-lg border border-slate-200 bg-slate-50 p-6 text-center text-slate-500">
+            Архив с результатами готов к скачиванию.
+          </div>
+        </template>
+        <button type="button" @click="download()"
+          class="mt-4 inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold transition-colors">
+          Скачать <span class="font-normal text-indigo-200" x-text="resultName"></span>
+        </button>
+      </div>
+    </template>
+
+  </main>
+
+  <footer class="max-w-5xl mx-auto px-4 pb-8 text-center text-sm text-slate-400">
+    FastAPI + Pillow · изображения обрабатываются в памяти и нигде не сохраняются
+  </footer>
+
+  <script>
+    function imageApp() {
+      return {
+        files: [],
+        dragging: false,
+        width: '',
+        height: '',
+        mode: 'fit',
+        format: 'jpeg',
+        quality: 82,
+        processing: false,
+        error: '',
+        resultUrl: null,
+        resultName: 'result',
+        resultIsImage: true,
+
+        get modeHint() {
+          const hints = {
+            fit: 'Вписать с сохранением пропорций — можно указать только одну сторону.',
+            cover: 'Заполнить область и обрезать по центру — нужны ширина и высота.',
+            crop: 'Обрезать по центру без масштабирования — нужны ширина и высота.',
+          };
+          return hints[this.mode] || '';
+        },
+
+        addFiles(fileList) {
+          const list = Array.from(fileList || []);
+          const accepted = list.filter((f) =>
+            ['image/jpeg', 'image/png'].includes(f.type) || /\.(jpe?g|png)$/i.test(f.name)
+          );
+          accepted.forEach((file) => this.files.push({ file, url: URL.createObjectURL(file) }));
+          const rejected = list.length - accepted.length;
+          if (rejected > 0) {
+            this.error = `Пропущено файлов: ${rejected}. Поддерживаются только JPEG и PNG.`;
+          }
+          this.$refs.fileInput.value = '';
+        },
+
+        removeFile(index) {
+          URL.revokeObjectURL(this.files[index].url);
+          this.files.splice(index, 1);
+          this.clearResult();
+        },
+
+        clearAll() {
+          this.files.forEach((f) => URL.revokeObjectURL(f.url));
+          this.files = [];
+          this.clearResult();
+        },
+
+        clearResult() {
+          if (this.resultUrl) URL.revokeObjectURL(this.resultUrl);
+          this.resultUrl = null;
+        },
+
+        formatSize(bytes) {
+          if (bytes < 1024) return bytes + ' B';
+          if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+          return (bytes / 1024 / 1024).toFixed(1) + ' MB';
+        },
+
+        async process() {
+          if (!this.files.length) return;
+
+          const width = this.width ? parseInt(this.width, 10) : null;
+          const height = this.height ? parseInt(this.height, 10) : null;
+
+          if ((this.mode === 'cover' || this.mode === 'crop') && (!width || !height)) {
+            this.error = 'Для этого режима нужно указать и ширину, и высоту.';
+            return;
+          }
+
+          this.processing = true;
+          this.error = '';
+          this.clearResult();
+
+          try {
+            const form = new FormData();
+            if (this.files.length === 1) {
+              form.append('file', this.files[0].file);
+            } else {
+              this.files.forEach((f) => form.append('files', f.file));
+            }
+            if (width) form.append('width', width);
+            if (height) form.append('height', height);
+            form.append('mode', this.mode);
+            form.append('format', this.format);
+            form.append('quality', this.quality);
+
+            const endpoint = this.files.length === 1 ? '/v1/process' : '/v1/process/batch';
+            const res = await fetch(endpoint, { method: 'POST', body: form });
+
+            if (!res.ok) {
+              let detail = res.statusText;
+              try {
+                const json = await res.json();
+                detail = json.detail || json.message || detail;
+              } catch (_) {}
+              throw new Error(`Ошибка ${res.status}: ${detail}`);
+            }
+
+            const blob = await res.blob();
+            this.resultUrl = URL.createObjectURL(blob);
+            this.resultName = this.filenameFrom(res) || (this.files.length === 1 ? 'result' : 'results.zip');
+            this.resultIsImage = blob.type.startsWith('image/');
+          } catch (err) {
+            this.error = err.message || 'Не удалось обработать изображения';
+          } finally {
+            this.processing = false;
+          }
+        },
+
+        filenameFrom(res) {
+          const cd = res.headers.get('Content-Disposition');
+          if (!cd) return null;
+          const m = cd.match(/filename="([^"]+)"/);
+          return m ? m[1] : null;
+        },
+
+        download() {
+          if (!this.resultUrl) return;
+          const a = document.createElement('a');
+          a.href = this.resultUrl;
+          a.download = this.resultName;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+        },
+      };
+    }
+  </script>
+</body>
+</html>
