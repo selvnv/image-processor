@@ -3,167 +3,172 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Image Processor</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <title>Image Processor — Mono</title>
+</title>  <script src="https://cdn.tailwindcss.com"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
   <style>[x-cloak]{display:none!important}</style>
 </head>
-<body class="min-h-screen bg-slate-100 text-slate-800 antialiased">
+<body class="min-h-screen bg-zinc-950 text-zinc-100 antialiased">
 
-  <header class="bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 text-white shadow-lg">
-    <div class="max-w-5xl mx-auto px-6 py-10">
-      <h1 class="text-3xl font-bold tracking-tight">Image Processor</h1>
-      <p class="mt-2 text-indigo-100">Ресайз, обрезка и сжатие изображений прямо в браузере</p>
-    </div>
+  <header class="max-w-7xl mx-auto px-6 pt-10 pb-6 border-b border-zinc-800/80">
+    <p class="text-xs font-mono uppercase tracking-[0.2em] text-emerald-400">image / processor</p>
+    <h1 class="mt-2 text-2xl font-semibold tracking-tight">Обработка изображений</h1>
   </header>
 
-  <main class="max-w-5xl mx-auto px-4 py-8" x-data="imageApp()" x-cloak>
+  <main class="max-w-7xl mx-auto px-4 py-6" x-data="imageApp()" x-cloak>
+    <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_340px] gap-6 lg:items-start">
 
-    <div class="mb-6">
-      <div
-        @dragover.prevent="dragging = true"
-        @dragleave.prevent="dragging = false"
-        @drop.prevent="dragging = false; addFiles($event.dataTransfer.files)"
-        @click="$refs.fileInput.click()"
-        :class="dragging ? 'border-indigo-500 bg-indigo-50' : 'border-slate-300 bg-white hover:border-indigo-400'"
-        class="border-2 border-dashed rounded-2xl p-10 text-center cursor-pointer transition-colors"
-      >
-        <input
-          type="file"
-          x-ref="fileInput"
-          multiple
-          accept=".jpg,.jpeg,.png,image/jpeg,image/png"
-          class="hidden"
-          @change="addFiles($event.target.files)"
-        />
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mx-auto h-12 w-12 text-slate-400">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-        </svg>
-        <p class="mt-4 text-lg font-medium text-slate-600">
-          Перетащите изображения сюда или <span class="text-indigo-600 font-semibold">выберите файлы</span>
-        </p>
-        <p class="mt-1 text-sm text-slate-400">JPEG, PNG · можно несколько файлов</p>
-      </div>
-    </div>
+      <!-- Left column -->
+      <div class="flex flex-col gap-6">
 
-    <template x-if="files.length">
-      <div class="mb-6 bg-white rounded-2xl shadow-sm p-5">
-        <div class="flex items-center justify-between mb-3">
-          <h2 class="text-sm font-semibold text-slate-500 uppercase tracking-wide">
-            Файлы (<span x-text="files.length"></span>)
-          </h2>
-          <button type="button" @click="clearAll()" class="text-sm text-slate-400 hover:text-red-500 transition-colors">Очистить</button>
-        </div>
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-          <template x-for="(item, index) in files" :key="index">
-            <div class="relative rounded-lg border border-slate-200 overflow-hidden bg-slate-50">
-              <img :src="item.url" class="h-24 w-full object-cover" />
-              <button type="button" @click="removeFile(index)"
-                class="absolute top-1.5 right-1.5 h-6 w-6 rounded-full bg-black/60 text-white text-sm leading-none flex items-center justify-center hover:bg-red-500 transition-colors">×</button>
-              <div class="px-2 py-1.5">
-                <p class="text-xs text-slate-600 truncate" :title="item.file.name" x-text="item.file.name"></p>
-                <p class="text-[11px] text-slate-400" x-text="formatSize(item.file.size)"></p>
-              </div>
+        <!-- Upload + files -->
+        <section
+          @dragover.prevent="dragging = true"
+          @dragleave.prevent="dragging = false"
+          @drop.prevent="dragging = false; addFiles($event.dataTransfer.files)"
+          class="rounded-xl border bg-zinc-900/60 p-4 transition-colors"
+          :class="dragging ? 'border-emerald-500/60 bg-emerald-500/5' : 'border-zinc-800'"
+        >
+          <div class="flex items-center justify-between gap-3 mb-3">
+            <div>
+              <h2 class="text-xs font-mono uppercase tracking-wider text-zinc-500">Файлы <span class="text-zinc-400" x-show="files.length" x-text="'(' + files.length + ')'"></span></h2>
+              <p class="text-[11px] text-zinc-600 mt-0.5" x-show="!files.length">Перетащите файлы сюда</p>
+            </div>
+            <button type="button" @click="$refs.fileInput.click()"
+              class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-zinc-800 bg-zinc-900 text-sm text-zinc-200 hover:border-emerald-500/40 hover:text-emerald-400 transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
+              </svg>
+              Загрузить
+            </button>
+            <input type="file" x-ref="fileInput" multiple accept=".jpg,.jpeg,.png,image/jpeg,image/png" class="hidden" @change="addFiles($event.target.files)" />
+          </div>
+
+          <template x-if="files.length">
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+              <template x-for="(item, index) in files" :key="index">
+                <div class="relative rounded-lg border border-zinc-800 overflow-hidden bg-zinc-900/50">
+                  <img :src="item.url" class="h-20 w-full object-cover" />
+                  <button type="button" @click="removeFile(index)" class="absolute top-1.5 right-1.5 h-5 w-5 rounded-full bg-zinc-800/80 text-zinc-300 text-xs leading-none flex items-center justify-center hover:bg-red-500/80 hover:text-white transition-colors">×</button>
+                  <div class="px-2 py-1.5">
+                    <p class="text-xs text-zinc-300 truncate" :title="item.file.name" x-text="item.file.name"></p>
+                    <p class="text-[11px] text-zinc-500" x-text="formatSize(item.file.size)"></p>
+                  </div>
+                </div>
+              </template>
             </div>
           </template>
-        </div>
+
+          <template x-if="!files.length">
+            <div class="rounded-lg border border-dashed border-zinc-800 py-8 text-center text-sm text-zinc-600">
+              JPEG, PNG · можно несколько
+            </div>
+          </template>
+        </section>
+
+        <!-- Results -->
+        <section class="rounded-xl border border-zinc-800 bg-zinc-900/60 p-4">
+          <h2 class="text-xs font-mono uppercase tracking-wider text-zinc-500 mb-3">Результат</h2>
+
+          <template x-if="error">
+            <div class="rounded-lg border border-red-500/30 bg-red-500/10 text-red-300 px-3 py-2.5 flex items-start justify-between gap-3">
+              <span class="text-sm" x-text="error"></span>
+              <button type="button" @click="error=''" class="text-red-400 hover:text-red-200 font-bold leading-none">×</button>
+            </div>
+          </template>
+
+          <template x-if="resultUrl && !error">
+            <div>
+              <template x-if="resultIsImage">
+                <img :src="resultUrl" class="max-h-80 rounded-lg border border-zinc-800" />
+              </template>
+              <template x-if="!resultIsImage">
+                <div class="rounded-lg border border-zinc-800 bg-zinc-900/50 p-6 text-center text-zinc-500">Архив с результатами готов.</div>
+              </template>
+              <button type="button" @click="download()"
+                class="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-zinc-950 text-sm font-semibold transition-colors">
+                Скачать <span class="font-normal opacity-80" x-text="resultName"></span>
+              </button>
+            </div>
+          </template>
+
+          <template x-if="!resultUrl && !error">
+            <div class="rounded-lg border border-dashed border-zinc-800 py-8 text-center text-sm text-zinc-600">
+              Здесь появится результат
+            </div>
+          </template>
+        </section>
       </div>
-    </template>
 
-    <div class="bg-white rounded-2xl shadow-sm p-6 mb-6">
-      <h2 class="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-5">Параметры обработки</h2>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1.5">Ширина, px</label>
-          <input type="number" min="1" x-model="width" placeholder="авто"
-            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1.5">Высота, px</label>
-          <input type="number" min="1" x-model="height" placeholder="авто"
-            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1.5">Режим</label>
-          <div class="grid grid-cols-3 gap-2">
-            <button type="button" @click="mode='fit'"
-              :class="mode==='fit' ? 'bg-indigo-600 text-white border-indigo-600 shadow' : 'bg-white text-slate-600 border-slate-300 hover:border-indigo-400'"
-              class="px-3 py-2 rounded-lg border text-sm font-medium transition-colors">Fit</button>
-            <button type="button" @click="mode='cover'"
-              :class="mode==='cover' ? 'bg-indigo-600 text-white border-indigo-600 shadow' : 'bg-white text-slate-600 border-slate-300 hover:border-indigo-400'"
-              class="px-3 py-2 rounded-lg border text-sm font-medium transition-colors">Cover</button>
-            <button type="button" @click="mode='crop'"
-              :class="mode==='crop' ? 'bg-indigo-600 text-white border-indigo-600 shadow' : 'bg-white text-slate-600 border-slate-300 hover:border-indigo-400'"
-              class="px-3 py-2 rounded-lg border text-sm font-medium transition-colors">Crop</button>
+      <!-- Params panel -->
+      <aside class="rounded-xl border border-zinc-800 bg-zinc-900/60 p-5 lg:sticky lg:top-6">
+        <h2 class="text-xs font-mono uppercase tracking-wider text-zinc-500 mb-4">Параметры</h2>
+        <div class="space-y-5">
+          <div>
+            <label class="block text-sm text-zinc-400 mb-1.5">Ширина, px</label>
+            <input type="number" min="1" x-model="width" placeholder="авто"
+              class="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500/40" />
           </div>
-          <p class="mt-2 text-xs text-slate-400" x-text="modeHint"></p>
-        </div>
+          <div>
+            <label class="block text-sm text-zinc-400 mb-1.5">Высота, px</label>
+            <input type="number" min="1" x-model="height" placeholder="авто"
+              class="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500/40" />
+          </div>
 
-        <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1.5">Формат</label>
-          <div class="grid grid-cols-2 gap-2">
-            <button type="button" @click="format='jpeg'"
-              :class="format==='jpeg' ? 'bg-indigo-600 text-white border-indigo-600 shadow' : 'bg-white text-slate-600 border-slate-300 hover:border-indigo-400'"
-              class="px-3 py-2 rounded-lg border text-sm font-medium transition-colors">JPEG</button>
-            <button type="button" @click="format='webp'"
-              :class="format==='webp' ? 'bg-indigo-600 text-white border-indigo-600 shadow' : 'bg-white text-slate-600 border-slate-300 hover:border-indigo-400'"
-              class="px-3 py-2 rounded-lg border text-sm font-medium transition-colors">WebP</button>
+          <div>
+            <label class="block text-sm text-zinc-400 mb-1.5">Режим</label>
+            <div class="grid grid-cols-3 gap-2">
+              <button type="button" @click="mode='fit'"
+                :class="mode==='fit' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/40' : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-600'"
+                class="px-2 py-2 rounded-lg border text-sm font-medium transition-colors">Fit</button>
+              <button type="button" @click="mode='cover'"
+                :class="mode==='cover' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/40' : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-600'"
+                class="px-2 py-2 rounded-lg border text-sm font-medium transition-colors">Cover</button>
+              <button type="button" @click="mode='crop'"
+                :class="mode==='crop' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/40' : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-600'"
+                class="px-2 py-2 rounded-lg border text-sm font-medium transition-colors">Crop</button>
+            </div>
+            <p class="mt-2 text-xs text-zinc-600" x-text="modeHint"></p>
+          </div>
+
+          <div>
+            <label class="block text-sm text-zinc-400 mb-1.5">Формат</label>
+            <div class="grid grid-cols-2 gap-2">
+              <button type="button" @click="format='jpeg'"
+                :class="format==='jpeg' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/40' : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-600'"
+                class="px-3 py-2 rounded-lg border text-sm font-medium transition-colors">JPEG</button>
+              <button type="button" @click="format='webp'"
+                :class="format==='webp' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/40' : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-600'"
+                class="px-3 py-2 rounded-lg border text-sm font-medium transition-colors">WebP</button>
+            </div>
+          </div>
+
+          <div>
+            <label class="flex items-center justify-between text-sm text-zinc-400 mb-1.5">
+              <span>Качество</span>
+              <span class="font-mono</span> text-emerald-400" x-text="quality"></span>
+            </label>
+            <input type="range" min="1" max="100" x-model.number="quality"
+              class="w-full h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-emerald-500" />
           </div>
         </div>
 
-        <div class="md:col-span-2">
-          <label class="flex items-center justify-between text-sm font-medium text-slate-700 mb-1.5">
-            <span>Качество</span></span>
-            <span class="text-indigo-600 font-semibold" x-text="quality"></span>
-          </label>
-          <input type="range" min="1" max="100" x-model.number="quality"
-            class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600" />
-        </div>
-      </div>
-    </div>
-
-    <div class="mb-6">
-      <button type="button" @click="process()" :disabled="!files.length || processing"
-        class="w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-semibold text-white transition-colors"
-        :class="(!files.length || processing) ? 'bg-slate-300 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700'">
-        <svg x-show="processing" class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
-        <span x-text="processing ? 'Обработка…' : 'Обработать изображения'"></span>
-      </button>
-    </div>
-
-    <template x-if="error">
-      <div class="mb-6 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 flex items-start justify-between gap-3">
-        <span class="text-sm" x-text="error"></span>
-        <button type="button" @click="error=''" class="text-red-400 hover:text-red-600 font-bold leading-none">×</button>
-      </div>
-    </template>
-
-    <template x-if="resultUrl">
-      <div class="bg-white rounded-2xl shadow-sm p-6">
-        <h2 class="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-3">Результат</h2>
-        <template x-if="resultIsImage">
-          <img :src="resultUrl" class="max-h-96 rounded-lg border border-slate-200 bg-slate-50" />
-        </template>
-        <template x-if="!resultIsImage">
-          <div class="rounded-lg border border-slate-200 bg-slate-50 p-6 text-center text-slate-500">
-            Архив с результатами готов к скачиванию.
-          </div>
-        </template>
-        <button type="button" @click="download()"
-          class="mt-4 inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold transition-colors">
-          Скачать <span class="font-normal text-indigo-200" x-text="resultName"></span>
+        <button type="button" @click="process()" :disabled="!files.length || processing"
+          class="mt-6 w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-semibold transition-colors"
+          :class="(!files.length || processing) ? 'bg-zinc-800 text-zinc-600 cursor-not-allowed' : 'bg-emerald-500 text-zinc-950 hover:bg-emerald-400'">
+          <svg x-show="processing" class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span x-text="processing ? 'Обработка…' : 'Обработать'"></span>
         </button>
-      </div>
-    </template>
+      </aside>
 
+    </div>
   </main>
 
-  <footer class="max-w-5xl mx-auto px-4 pb-8 text-center text-sm text-slate-400">
-    FastAPI + Pillow · изображения обрабатываются в памяти и нигде не сохраняются
+  <footer class="max-w-7xl mx-auto px-4 pb-8 text-center text-xs text-zinc-700">
+    Mono · FastAPI + Pillow · изображения обрабатываются в памяти
   </footer>
 
   <script>
