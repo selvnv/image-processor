@@ -65,8 +65,12 @@ def _resolve_format(input_format: str, requested: str) -> str:
     return requested
 
 
-def process_image(source: bytes, options: ProcessOptions) -> ProcessedImage:
-    """Transform one image according to ``options``."""
+def decode_image(source: bytes) -> tuple[Image.Image, str]:
+    """Decode, validate, load and exif-transpose ``source``.
+
+    Returns ``(image, input_format)`` where ``input_format`` is the Pillow
+    format name ("JPEG"/"PNG") captured before transforms may lose it.
+    """
     try:
         image = Image.open(io.BytesIO(source))
     except Exception as exc:  # any decode failure means "not a usable image"
@@ -77,14 +81,20 @@ def process_image(source: bytes, options: ProcessOptions) -> ProcessedImage:
             f"unsupported input format '{image.format}'; expected JPEG or PNG"
         )
 
-    input_format = image.format  # captured before transforms may lose it
+    input_format = image.format
 
     if image.width * image.height > MAX_PIXELS:
         raise ImageTooLargeError(f"image is too large ({image.width}x{image.height})")
 
     image.load()  # force decode; surfaces truncated/corrupt files
     image = ImageOps.exif_transpose(image)
+    return image, input_format
 
+
+def encode_image(
+    image: Image.Image, input_format: str, options: ProcessOptions
+) -> ProcessedImage:
+    """Apply geometry and encode a decoded image according to ``options``."""
     output_format = _resolve_format(input_format, options.format)
 
     image = _apply_geometry(image, options)
@@ -96,6 +106,12 @@ def process_image(source: bytes, options: ProcessOptions) -> ProcessedImage:
     else:
         image.save(buffer, format=output_format.upper(), quality=options.quality)
     return ProcessedImage(data=buffer.getvalue(), format=output_format)
+
+
+def process_image(source: bytes, options: ProcessOptions) -> ProcessedImage:
+    """Transform one image according to ``options``."""
+    image, input_format = decode_image(source)
+    return encode_image(image, input_format, options)
 
 
 def _apply_geometry(image: Image.Image, options: ProcessOptions) -> Image.Image:

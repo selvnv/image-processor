@@ -63,7 +63,11 @@
                   <button type="button" @click="removeFile(index)" class="absolute top-1.5 right-1.5 h-5 w-5 rounded-full bg-black/60 text-zinc-100 text-xs leading-none flex items-center justify-center hover:bg-red-600 transition-colors">×</button>
                   <div class="px-2 py-1.5">
                     <p class="text-xs text-zinc-300 truncate" :title="item.file.name" x-text="item.file.name"></p>
-                    <p class="text-[11px] text-zinc-500" x-text="formatSize(item.file.size)"></p>
+                    <p class="text-[11px] text-zinc-500">
+                      <span x-text="formatSize(item.file.size)"></span>
+                      <span class="text-zinc-600"> → </span>
+                      <span class="text-emerald-400/90" x-text="item.estimatedSize"></span>
+                    </p>
                   </div>
                 </div>
               </template>

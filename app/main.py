@@ -16,12 +16,15 @@ from fastapi import Depends, FastAPI, File, Form, HTTPException, Response, Uploa
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import JSONResponse
 
+from .cache import image_cache, result_cache, result_key, store_image
 from .processing import (
     ImageProcessingError,
     ImageTooLargeError,
     InvalidImageError,
     ProcessedImage,
     UnsupportedFormatError,
+    decode_image,
+    encode_image,
     process_image,
 )
 from .schemas import ProcessOptions
@@ -71,6 +74,42 @@ async def process_single(
         media_type=result.media_type,
         headers={"Content-Disposition": _content_disposition(filename)},
     )
+
+
+@app.post("/v1/upload")
+async def upload_image(
+    file: Annotated[UploadFile, File(description="Source image (JPEG/PNG)")],
+) -> dict:
+    """Upload and cache a decoded image, returning its id."""
+    data = await file.read()
+    if len(data) > MAX_UPLOAD_BYTES:
+        raise HTTPException(status_code=413, detail="file exceeds the size limit")
+
+    image, input_format = await run_in_threadpool(decode_image, data)
+    file_id = store_image(image, input_format)
+    return {"file_id": file_id}
+
+
+@app.post("/v1/size")
+async def image_size(
+    file_id: Annotated[str, Form()],
+    options: Annotated[ProcessOptions, Depends(parse_options)],
+) -> dict:
+    """Return the exact compressed size (bytes) for the given parameters."""
+    entry = image_cache.get(file_id)
+    if entry is None:
+        raise HTTPException(status_code=404, detail="file_id not found or expired")
+
+    image, input_format = entry
+
+    key = result_key(file_id, options)
+    size = result_cache.get(key)
+    if size is None:
+        result = await run_in_threadpool(encode_image, image, input_format, options)
+        size = len(result.data)
+        result_cache.put(key, size)
+
+    return {"size": size}
 
 
 @app.post("/v1/process/batch")
