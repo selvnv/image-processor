@@ -5,7 +5,7 @@ function imageApp() {
     width: '',
     height: '',
     mode: 'fit',
-    format: 'jpeg',
+    format: 'original',
     quality: 82,
     processing: false,
     error: '',
@@ -20,6 +20,13 @@ function imageApp() {
         crop: 'Обрезать по центру без масштабирования — нужны ширина и высота.',
       };
       return hints[this.mode] || '';
+    },
+
+    get qualityHint() {
+      if (this.format === 'png') return 'PNG — без потерь: качество не применяется.';
+      if (this.format === 'original') return 'Исходный формат: качество влияет на JPEG, для PNG — без потерь.';
+      if (this.format === 'webp') return 'WebP: качество задаёт степень сжатия — ниже значение, легче файл.';
+      return 'JPEG: качество задаёт степень сжатия — ниже значение, легче файл.';
     },
 
     addFiles(fileList) {

@@ -19,7 +19,7 @@ class ProcessOptions(BaseModel):
         default=None, ge=1, le=10000, description="Target height in pixels"
     )
     mode: Literal["fit", "cover", "crop"] = "fit"
-    format: Literal["jpeg", "webp", "png"] = "jpeg"
+    format: Literal["jpeg", "webp", "png", "original"] = "original"
     quality: int = Field(default=82, ge=1, le=100)
 
     @model_validator(mode="after")

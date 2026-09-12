@@ -54,6 +54,17 @@ class ProcessedImage:
         return _OUTPUT_EXTENSIONS[self.format]
 
 
+def _resolve_format(input_format: str, requested: str) -> str:
+    """Resolve the concrete output format.
+
+    ``requested == "original"`` keeps the input's format (JPEG -> jpeg,
+    PNG -> png). Otherwise the requested format is used as-is.
+    """
+    if requested == "original":
+        return "jpeg" if input_format == "JPEG" else "png"
+    return requested
+
+
 def process_image(source: bytes, options: ProcessOptions) -> ProcessedImage:
     """Transform one image according to ``options``."""
     try:
@@ -66,21 +77,25 @@ def process_image(source: bytes, options: ProcessOptions) -> ProcessedImage:
             f"unsupported input format '{image.format}'; expected JPEG or PNG"
         )
 
+    input_format = image.format  # captured before transforms may lose it
+
     if image.width * image.height > MAX_PIXELS:
         raise ImageTooLargeError(f"image is too large ({image.width}x{image.height})")
 
     image.load()  # force decode; surfaces truncated/corrupt files
     image = ImageOps.exif_transpose(image)
 
+    output_format = _resolve_format(input_format, options.format)
+
     image = _apply_geometry(image, options)
-    image = _prepare_for_output(image, options.format)
+    image = _prepare_for_output(image, output_format)
 
     buffer = io.BytesIO()
-    if options.format == "png":
+    if output_format == "png":
         image.save(buffer, format="PNG")
     else:
-        image.save(buffer, format=options.format.upper(), quality=options.quality)
-    return ProcessedImage(data=buffer.getvalue(), format=options.format)
+        image.save(buffer, format=output_format.upper(), quality=options.quality)
+    return ProcessedImage(data=buffer.getvalue(), format=output_format)
 
 
 def _apply_geometry(image: Image.Image, options: ProcessOptions) -> Image.Image:

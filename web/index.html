@@ -141,7 +141,7 @@
 
           <div>
             <label class="block text-sm text-zinc-400 mb-1.5">Формат</label>
-            <div class="grid grid-cols-3 gap-2">
+            <div class="grid grid-cols-2 gap-2">
               <button type="button" @click="format='jpeg'"
                 :class="format==='jpeg' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/40 shadow-[0_0_12px_rgba(52,211,153,0.35)]' : 'bg-white/[0.03] border-zinc-800 text-zinc-400 hover:border-emerald-500/50'"
                 class="px-3 py-2 rounded-md border text-sm font-medium transition-all">JPEG</button>
@@ -151,16 +151,20 @@
               <button type="button" @click="format='png'"
                 :class="format==='png' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/40 shadow-[0_0_12px_rgba(52,211,153,0.35)]' : 'bg-white/[0.03] border-zinc-800 text-zinc-400 hover:border-emerald-500/50'"
                 class="px-3 py-2 rounded-md border text-sm font-medium transition-all">PNG</button>
+              <button type="button" @click="format='original'"
+                :class="format==='original' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/40 shadow-[0_0_12px_rgba(52,211,153,0.35)]' : 'bg-white/[0.03] border-zinc-800 text-zinc-400 hover:border-emerald-500/50'"
+                class="px-3 py-2 rounded-md border text-sm font-medium transition-all">Исходный</button>
             </div>
           </div>
 
           <div>
-            <label class="flex items-center justify-between text-sm text-zinc-400 mb-1.5">
-              <span>Ка</span>чество</span>
-              <span class="text-emerald-400 glow-emerald font-semibold" x-text="quality"></span>
+            <label class="flex items-center justify-between gap-2 text-sm text-zinc-400 mb-1.5 whitespace-nowrap">
+              <span class="shrink-0">Качество</span>
+              <span class="text-emerald-400 glow-emerald font-semibold shrink-0" x-text="quality"></span>
             </label>
             <input type="range" min="1" max="100" x-model.number="quality"
               class="w-full h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-emerald-500" />
+            <p class="mt-1.5 text-[11px] leading-relaxed text-zinc-500" x-text="qualityHint"></p>
           </div>
         </div>
 
