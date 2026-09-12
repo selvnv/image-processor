@@ -1,0 +1,31 @@
+/* Image Processor — base styles (fonts + cyberpunk effects) */
+
+[x-cloak] {
+  display: none !important;
+}
+
+body {
+  font-family: 'Exo 2', system-ui, sans-serif;
+}
+
+.display {
+  font-family: 'Play', sans-serif;
+}
+
+.glow-emerald {
+  text-shadow: 0 0 14px rgba(52, 211, 153, 0.55);
+}
+
+.grain::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 3px 3px;
+}
+
+.scanlines {
+  background-image: repeating-linear-gradient(0deg, rgba(52, 211, 153, 0.04) 0 1px, transparent 1px 4px);
+}
