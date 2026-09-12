@@ -15,6 +15,7 @@ from typing import Annotated, Optional
 from fastapi import Depends, FastAPI, File, Form, HTTPException, Response, UploadFile
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import JSONResponse
+from pydantic import ValidationError
 
 from .cache import image_cache, result_cache, result_key, store_image
 from .processing import (
@@ -49,7 +50,10 @@ def parse_options(
         "format": format,
         "quality": quality,
     }
-    return ProcessOptions(**{k: v for k, v in provided.items() if v is not None})
+    try:
+        return ProcessOptions(**{k: v for k, v in provided.items() if v is not None})
+    except ValidationError as exc:
+        raise HTTPException(status_code=422, detail=exc.errors()) from exc
 
 
 @app.get("/health")

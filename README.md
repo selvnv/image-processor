@@ -6,16 +6,73 @@
 
 ## Запуск
 
+Есть два режима: полный стек (со встроенным nginx) и только приложение
+(под внешний nginx).
+
+### Полный стек (встроенный nginx)
+
 ```bash
-docker compose up --build
+docker compose --profile web up --build
 ```
 
 - **UI:** `http://localhost`
 - **API:** `http://localhost/v1/...` (за nginx)
 - **Healthcheck:** `http://localhost/health`
 
-Фронтенд — статическая страница (Tailwind CSS + Alpine.js), которую отдаёт
-nginx. API проксируется на FastAPI.
+### Только приложение (внешний nginx)
+
+Если на сервере уже стоит свой nginx, запускаем только backend:
+
+```bash
+docker compose up --build
+```
+
+FastAPI слушает `127.0.0.1:8000` и отвечает только на API. Статику фронтенда
+собираем один раз и кладём в каталог, который раздаёт внешний nginx:
+
+```bash
+cd web
+npm install
+npm run build   # соберёт в web/dist
+# скопировать содержимое web/dist в корень nginx (например /var/www/image-processor)
+```
+
+Пример конфига внешнего nginx:
+
+```nginx
+server {
+    listen 80;
+    server_name _;
+
+    client_max_body_size 20m;
+
+    root /var/www/image-processor;
+    index index.html;
+
+    location /v1/ {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 60s;
+    }
+
+    location /health {
+        proxy_pass http://127.0.0.1:8000;
+        access_log off;
+    }
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}
+```
+
+Фронтенд — статическая страница (Tailwind CSS + Alpine.js). В полном стеке её
+отдаёт встроенный nginx; в режиме с внешним nginx — сам nginx с каталога на
+диске. API проксируется на FastAPI.
 
 ## API
 
@@ -29,7 +86,7 @@ nginx. API проксируется на FastAPI.
 | width   | int          | целевая ширина, px                                               |
 | height  | int          | целевая высота, px                                               |
 | mode    | fit/cover/crop | `fit` — вписать с сохранением пропорций; `cover` — заполнить и обрезать по центру; `crop` — обрезать по центру без масштабирования |
-| format  | jpeg/webp    | выходной формат (default: `jpeg`)                                |
+| format  | jpeg/webp/png/original | выходной формат (default: `original` — исходный формат файла)   |
 | quality | 1..100       | качество сжатия (default: `82`)                                  |
 
 `mode=cover` и `mode=crop` требуют одновременно `width` и `height`.
@@ -69,5 +126,4 @@ curl -X POST http://localhost/v1/process/batch \
 - Максимальный размер файла: 20 МБ (nginx `client_max_body_size`).
 - Максимум пикселей на изображение: 40 МП (защита от decompression-bomb).
 - `mode=fit` не увеличивает изображение (только вписывает/уменьшает).
-- Tailwind подключён через Play CDN — для продакшена стоит собрать и
-  завендорить CSS вместо CDN.
+- Tailwind и Alpine.js завендорены при сборке образа — внешних CDN нет.

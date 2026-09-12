@@ -1,4 +1,6 @@
-/* Image Processor — base styles (fonts + cyberpunk effects) */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 [x-cloak] {
   display: none !important;

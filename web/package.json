@@ -1,0 +1,14 @@
+{
+  "name": "image-processor-web",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "build": "node build.js"
+  },
+  "devDependencies": {
+    "@fontsource/exo-2": "^5.0.0",
+    "@fontsource/play": "^5.0.0",
+    "alpinejs": "3.14.1",
+    "tailwindcss": "3.4.17"
+  }
+}

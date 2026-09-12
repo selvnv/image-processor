@@ -87,6 +87,13 @@ function imageApp() {
       const fmt = this.format;
       const quality = this.quality;
 
+      if ((mode === 'cover' || mode === 'crop') && (!tw || !th)) {
+        for (const item of this.files.slice()) {
+          item.estimatedSize = '—';
+        }
+        return;
+      }
+
       for (const item of this.files.slice()) {
         if (!item.fileId) {
           item.estimatedSize = '—';

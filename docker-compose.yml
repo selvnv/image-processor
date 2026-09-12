@@ -3,6 +3,9 @@ services:
     build: .
     expose:
       - "8000"
+    # Published only on localhost so an external (host) nginx can proxy to it.
+    ports:
+      - "127.0.0.1:8000:8000"
     restart: unless-stopped
     healthcheck:
       test:
@@ -18,12 +21,14 @@ services:
       start_period: 10s
 
   nginx:
-    image: nginx:alpine
+    # Bundled reverse proxy + static server. Only needed when you don't have
+    # your own nginx: `docker compose --profile web up --build`.
+    build:
+      context: .
+      dockerfile: Dockerfile.nginx
+    profiles: ["web"]
     ports:
       - "80:80"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./web:/usr/share/nginx/html:ro
     depends_on:
       app:
         condition: service_healthy
