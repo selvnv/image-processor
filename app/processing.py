@@ -18,8 +18,8 @@ MAX_PIXELS = 40_000_000
 
 SUPPORTED_INPUT_FORMATS = {"JPEG", "PNG"}
 
-_OUTPUT_EXTENSIONS = {"jpeg": "jpg", "webp": "webp"}
-_OUTPUT_MEDIA_TYPES = {"jpeg": "image/jpeg", "webp": "image/webp"}
+_OUTPUT_EXTENSIONS = {"jpeg": "jpg", "webp": "webp", "png": "png"}
+_OUTPUT_MEDIA_TYPES = {"jpeg": "image/jpeg", "webp": "image/webp", "png": "image/png"}
 
 
 class ImageProcessingError(Exception):
@@ -76,7 +76,10 @@ def process_image(source: bytes, options: ProcessOptions) -> ProcessedImage:
     image = _prepare_for_output(image, options.format)
 
     buffer = io.BytesIO()
-    image.save(buffer, format=options.format.upper(), quality=options.quality)
+    if options.format == "png":
+        image.save(buffer, format="PNG")
+    else:
+        image.save(buffer, format=options.format.upper(), quality=options.quality)
     return ProcessedImage(data=buffer.getvalue(), format=options.format)
 
 
@@ -130,7 +133,7 @@ def _prepare_for_output(image: Image.Image, fmt: str) -> Image.Image:
             return _flatten_alpha(image)
         return image.convert("RGB")
 
-    # WebP supports alpha.
+    # WebP and PNG support alpha.
     if _has_alpha(image):
         return image.convert("RGBA")
     return image.convert("RGB")
