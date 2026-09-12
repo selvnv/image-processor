@@ -3,25 +3,31 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Image Processor — Mono</title>
-</title>  <script src="https://cdn.tailwindcss.com"></script>
+  <title>Image Processor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="app.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
-  <style>[x-cloak]{display:none!important}</style>
+  <style>
+    [x-cloak]{display:none!important}
+    body { font-family: 'Inter', system-ui, sans-serif; }
+    .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+  </style>
 </head>
 <body class="min-h-screen bg-zinc-950 text-zinc-100 antialiased">
 
   <header class="max-w-7xl mx-auto px-6 pt-10 pb-6 border-b border-zinc-800/80">
-    <p class="text-xs font-mono uppercase tracking-[0.2em] text-emerald-400">image / processor</p>
+    <p class="mono text-xs uppercase tracking-[0.2em] text-emerald-400">image / processor</p>
     <h1 class="mt-2 text-2xl font-semibold tracking-tight">Обработка изображений</h1>
   </header>
 
   <main class="max-w-7xl mx-auto px-4 py-6" x-data="imageApp()" x-cloak>
     <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_340px] gap-6 lg:items-start">
 
-      <!-- Left column -->
       <div class="flex flex-col gap-6">
 
-        <!-- Upload + files -->
         <section
           @dragover.prevent="dragging = true"
           @dragleave.prevent="dragging = false"
@@ -31,7 +37,7 @@
         >
           <div class="flex items-center justify-between gap-3 mb-3">
             <div>
-              <h2 class="text-xs font-mono uppercase tracking-wider text-zinc-500">Файлы <span class="text-zinc-400" x-show="files.length" x-text="'(' + files.length + ')'"></span></h2>
+              <h2 class="mono text-xs uppercase tracking-wider text-zinc-500">Файлы <span class="text-zinc-400" x-show="files.length" x-text="'(' + files.length + ')'"></span></h2>
               <p class="text-[11px] text-zinc-600 mt-0.5" x-show="!files.length">Перетащите файлы сюда</p>
             </div>
             <button type="button" @click="$refs.fileInput.click()"
@@ -66,9 +72,8 @@
           </template>
         </section>
 
-        <!-- Results -->
         <section class="rounded-xl border border-zinc-800 bg-zinc-900/60 p-4">
-          <h2 class="text-xs font-mono uppercase tracking-wider text-zinc-500 mb-3">Результат</h2>
+          <h2 class="mono text-xs uppercase tracking-wider text-zinc-500 mb-3">Результат</h2>
 
           <template x-if="error">
             <div class="rounded-lg border border-red-500/30 bg-red-500/10 text-red-300 px-3 py-2.5 flex items-start justify-between gap-3">
@@ -100,9 +105,8 @@
         </section>
       </div>
 
-      <!-- Params panel -->
       <aside class="rounded-xl border border-zinc-800 bg-zinc-900/60 p-5 lg:sticky lg:top-6">
-        <h2 class="text-xs font-mono uppercase tracking-wider text-zinc-500 mb-4">Параметры</h2>
+        <h2 class="mono text-xs uppercase tracking-wider text-zinc-500 mb-4">Параметры</h2>
         <div class="space-y-5">
           <div>
             <label class="block text-sm text-zinc-400 mb-1.5">Ширина, px</label>
@@ -145,8 +149,8 @@
 
           <div>
             <label class="flex items-center justify-between text-sm text-zinc-400 mb-1.5">
-              <span>Качество</span>
-              <span class="font-mono</span> text-emerald-400" x-text="quality"></span>
+              <span>Качество</span</span>>
+              <span class="mono text-emerald-400" x-text="quality"></span>
             </label>
             <input type="range" min="1" max="100" x-model.number="quality"
               class="w-full h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-emerald-500" />
@@ -168,139 +172,8 @@
   </main>
 
   <footer class="max-w-7xl mx-auto px-4 pb-8 text-center text-xs text-zinc-700">
-    Mono · FastAPI + Pillow · изображения обрабатываются в памяти
+    Mono · Inter + JetBrains Mono · FastAPI + Pillow
   </footer>
 
-  <script>
-    function imageApp() {
-      return {
-        files: [],
-        dragging: false,
-        width: '',
-        height: '',
-        mode: 'fit',
-        format: 'jpeg',
-        quality: 82,
-        processing: false,
-        error: '',
-        resultUrl: null,
-        resultName: 'result',
-        resultIsImage: true,
-
-        get modeHint() {
-          const hints = {
-            fit: 'Вписать с сохранением пропорций — можно указать только одну сторону.',
-            cover: 'Заполнить область и обрезать по центру — нужны ширина и высота.',
-            crop: 'Обрезать по центру без масштабирования — нужны ширина и высота.',
-          };
-          return hints[this.mode] || '';
-        },
-
-        addFiles(fileList) {
-          const list = Array.from(fileList || []);
-          const accepted = list.filter((f) =>
-            ['image/jpeg', 'image/png'].includes(f.type) || /\.(jpe?g|png)$/i.test(f.name)
-          );
-          accepted.forEach((file) => this.files.push({ file, url: URL.createObjectURL(file) }));
-          const rejected = list.length - accepted.length;
-          if (rejected > 0) {
-            this.error = `Пропущено файлов: ${rejected}. Поддерживаются только JPEG и PNG.`;
-          }
-          this.$refs.fileInput.value = '';
-        },
-
-        removeFile(index) {
-          URL.revokeObjectURL(this.files[index].url);
-          this.files.splice(index, 1);
-          this.clearResult();
-        },
-
-        clearAll() {
-          this.files.forEach((f) => URL.revokeObjectURL(f.url));
-          this.files = [];
-          this.clearResult();
-        },
-
-        clearResult() {
-          if (this.resultUrl) URL.revokeObjectURL(this.resultUrl);
-          this.resultUrl = null;
-        },
-
-        formatSize(bytes) {
-          if (bytes < 1024) return bytes + ' B';
-          if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-          return (bytes / 1024 / 1024).toFixed(1) + ' MB';
-        },
-
-        async process() {
-          if (!this.files.length) return;
-
-          const width = this.width ? parseInt(this.width, 10) : null;
-          const height = this.height ? parseInt(this.height, 10) : null;
-
-          if ((this.mode === 'cover' || this.mode === 'crop') && (!width || !height)) {
-            this.error = 'Для этого режима нужно указать и ширину, и высоту.';
-            return;
-          }
-
-          this.processing = true;
-          this.error = '';
-          this.clearResult();
-
-          try {
-            const form = new FormData();
-            if (this.files.length === 1) {
-              form.append('file', this.files[0].file);
-            } else {
-              this.files.forEach((f) => form.append('files', f.file));
-            }
-            if (width) form.append('width', width);
-            if (height) form.append('height', height);
-            form.append('mode', this.mode);
-            form.append('format', this.format);
-            form.append('quality', this.quality);
-
-            const endpoint = this.files.length === 1 ? '/v1/process' : '/v1/process/batch';
-            const res = await fetch(endpoint, { method: 'POST', body: form });
-
-            if (!res.ok) {
-              let detail = res.statusText;
-              try {
-                const json = await res.json();
-                detail = json.detail || json.message || detail;
-              } catch (_) {}
-              throw new Error(`Ошибка ${res.status}: ${detail}`);
-            }
-
-            const blob = await res.blob();
-            this.resultUrl = URL.createObjectURL(blob);
-            this.resultName = this.filenameFrom(res) || (this.files.length === 1 ? 'result' : 'results.zip');
-            this.resultIsImage = blob.type.startsWith('image/');
-          } catch (err) {
-            this.error = err.message || 'Не удалось обработать изображения';
-          } finally {
-            this.processing = false;
-          }
-        },
-
-        filenameFrom(res) {
-          const cd = res.headers.get('Content-Disposition');
-          if (!cd) return null;
-          const m = cd.match(/filename="([^"]+)"/);
-          return m ? m[1] : null;
-        },
-
-        download() {
-          if (!this.resultUrl) return;
-          const a = document.createElement('a');
-          a.href = this.resultUrl;
-          a.download = this.resultName;
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
-        },
-      };
-    }
-  </script>
 </body>
 </html>
