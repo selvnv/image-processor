@@ -2,10 +2,10 @@ services:
   app:
     build: .
     expose:
-      - "8000"
+      - "10001"
     # Published only on localhost so an external (host) nginx can proxy to it.
     ports:
-      - "127.0.0.1:8000:8000"
+      - "127.0.0.1:10001:8000"
     restart: unless-stopped
     healthcheck:
       test:

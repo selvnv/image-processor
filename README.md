@@ -21,20 +21,27 @@ docker compose --profile web up --build
 
 ### Только приложение (внешний nginx)
 
+Предварительно :
+- установить `Docker`
+- установить `npm`
+- клонировать репозиторий
+- перейти в каталог проекта
+
 Если на сервере уже стоит свой nginx, запускаем только backend:
 
 ```bash
 docker compose up --build
 ```
 
-FastAPI слушает `127.0.0.1:8000` и отвечает только на API. Статику фронтенда
+FastAPI слушает `127.0.0.1:10001` и отвечает только на API. Статику фронтенда
 собираем один раз и кладём в каталог, который раздаёт внешний nginx:
 
 ```bash
 cd web
-npm install
-npm run build   # соберёт в web/dist
+sudo npm install
+sudo npm run build   # соберёт в web/dist
 # скопировать содержимое web/dist в корень nginx (например /var/www/image-processor)
+sudo cp -r dist/* /services/apps/nginx/web/static/imagetool.ru/
 ```
 
 Пример конфига внешнего nginx:
@@ -50,7 +57,7 @@ server {
     index index.html;
 
     location /v1/ {
-        proxy_pass http://127.0.0.1:8000;
+        proxy_pass http://127.0.0.1:10001;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -60,7 +67,7 @@ server {
     }
 
     location /health {
-        proxy_pass http://127.0.0.1:8000;
+        proxy_pass http://127.0.0.1:10001;
         access_log off;
     }
 
